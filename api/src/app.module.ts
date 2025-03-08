@@ -13,7 +13,7 @@ import { GoogleDriveService } from './modules/googleDrive/googleDrive.service';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => {
-        const databaseUrl = configService.get('DATABASE_URL');
+        const databaseUrl = configService.get<string>('DATABASE_URL');
 
         if (databaseUrl) {
           return {
@@ -25,17 +25,19 @@ import { GoogleDriveService } from './modules/googleDrive/googleDrive.service';
           };
         }
 
-        return ({
-          dialect: 'postgres',
-          host: configService.get<string>('DB_HOST'),
-          port: configService.get<number>('DB_PORT'),
-          username: configService.get<string>('DB_USER'),
-          password: String(configService.get<string>('DB_PASSWORD')),
-          database: configService.get<string>('DB_NAME'),
-          models: [FileModel],
-          autoLoadModels: true,
-          synchronize: true,
-        });
+        throw new Error('DATABASE_URL not found');
+
+        // return ({
+        //   dialect: 'postgres',
+        //   host: configService.get<string>('DB_HOST'),
+        //   port: configService.get<number>('DB_PORT'),
+        //   username: configService.get<string>('DB_USER'),
+        //   password: String(configService.get<string>('DB_PASSWORD')),
+        //   database: configService.get<string>('DB_NAME'),
+        //   models: [FileModel],
+        //   autoLoadModels: true,
+        //   synchronize: true,
+        // });
       },
     }),
     SequelizeModule.forFeature([FileModel]),
