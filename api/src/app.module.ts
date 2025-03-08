@@ -8,11 +8,23 @@ import { GoogleDriveService } from './modules/googleDrive/googleDrive.service';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({ isGlobal: true }), // Load global environment variables
+    ConfigModule.forRoot({ isGlobal: true }),
     SequelizeModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: async (configService: ConfigService) => {
+        const databaseUrl = configService.get('DATABASE_URL');
+
+        if (databaseUrl) {
+          return {
+            dialect: 'postgres',
+            url: databaseUrl,
+            models: [FileModel],
+            autoLoadModels: true,
+            synchronize: true,
+          };
+        }
+
         return ({
           dialect: 'postgres',
           host: configService.get<string>('DB_HOST'),
