@@ -4,7 +4,9 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc"
+    "build": "npm run build:api && npm run build:fe",
+    "build:api": "cd api && tsc",
+    "build:fe": "cd frontend && npm run build"
   },
   "dependencies": {},
   "devDependencies": {
