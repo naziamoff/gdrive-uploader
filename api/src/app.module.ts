@@ -15,8 +15,6 @@ import { GoogleDriveService } from './modules/googleDrive/googleDrive.service';
       useFactory: async (configService: ConfigService) => {
         const databaseUrl = configService.get<string>('DATABASE_URL');
 
-        console.log(`DATABASE_URL: ${databaseUrl}`);
-
         if (databaseUrl) {
           return {
             dialect: 'postgres',
@@ -27,19 +25,17 @@ import { GoogleDriveService } from './modules/googleDrive/googleDrive.service';
           };
         }
 
-        throw new Error('DATABASE_URL not found');
-
-        // return ({
-        //   dialect: 'postgres',
-        //   host: configService.get<string>('DB_HOST'),
-        //   port: configService.get<number>('DB_PORT'),
-        //   username: configService.get<string>('DB_USER'),
-        //   password: String(configService.get<string>('DB_PASSWORD')),
-        //   database: configService.get<string>('DB_NAME'),
-        //   models: [FileModel],
-        //   autoLoadModels: true,
-        //   synchronize: true,
-        // });
+        return ({
+          dialect: 'postgres',
+          host: configService.get<string>('DB_HOST'),
+          port: configService.get<number>('DB_PORT'),
+          username: configService.get<string>('DB_USER'),
+          password: String(configService.get<string>('DB_PASSWORD')),
+          database: configService.get<string>('DB_NAME'),
+          models: [FileModel],
+          autoLoadModels: true,
+          synchronize: true,
+        });
       },
     }),
     SequelizeModule.forFeature([FileModel]),
