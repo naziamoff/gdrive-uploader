@@ -1,0 +1,14 @@
+events {
+    worker_connections 1024;
+}
+
+http {
+    server {
+        listen ${PORT};
+
+        location / {
+            root /usr/share/nginx/html;
+            try_files $uri /index.html;
+        }
+    }
+}
