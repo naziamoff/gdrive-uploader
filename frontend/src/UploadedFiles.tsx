@@ -20,10 +20,8 @@ export const UploadedFiles: React.FC = () => {
   const [files, setFiles] = useState<File[]>([]);
 
   useEffect(() => {
-    const apiUrl = process.env.REACT_APP_API_URL;
-
     const fetchFiles = async () => {
-      const response = await fetch(`${apiUrl}/files`);
+      const response = await fetch('/files');
       const data = await response.json();
       setFiles(data);
     };

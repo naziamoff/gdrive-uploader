@@ -57,9 +57,7 @@ export const MultipleFilesUploadForm: React.FC = () => {
     setIsUploading(true);
 
     try {
-      const apiUrl = process.env.REACT_APP_API_URL;
-
-      const response = await fetch(`${apiUrl}/files`, {
+      const response = await fetch('/files', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
