@@ -7,7 +7,7 @@ server {
     }
 
         location /api/ {
-            proxy_pass https://gdrive-uploader-c6e1f491b041.herokuapp.com/;  # Use the dynamically assigned API port
+            proxy_pass http://api/;  # Use the dynamically assigned API port
             proxy_set_header Host $host;
             proxy_set_header X-Real-IP $remote_addr;
             proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
