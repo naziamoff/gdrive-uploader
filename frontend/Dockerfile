@@ -1,24 +1,23 @@
+# Step 1: Build the frontend
 FROM node:22-alpine AS build
 
 WORKDIR /app
 
+# Copy and install dependencies for the frontend
 COPY package.json package-lock.json ./
 RUN npm install
 
+# Copy app files and build the frontend
 COPY . .
-
 RUN npm run build
 
-FROM nginx:alpine
+# Step 2: Set up the production environment
+FROM node:22-alpine
 
-COPY --from=build /app/build /usr/share/nginx/html
+WORKDIR /app
 
-# Copy the template to the correct location for auto-substitution
-COPY default.conf.template /etc/nginx/templates/default.conf.template
+# Copy built frontend files from the build stage
+COPY --from=build /app/build /app/build
 
-RUN chmod -R 755 /usr/share/nginx/html
-
+# Expose the port that the frontend will be served on
 EXPOSE 8080
-
-# The official nginx image will handle variable substitution and starting nginx
-CMD ["nginx", "-g", "daemon off;"]

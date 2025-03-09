@@ -21,7 +21,7 @@ export const UploadedFiles: React.FC = () => {
 
   useEffect(() => {
     const fetchFiles = async () => {
-      const response = await fetch('/files');
+      const response = await fetch('https://gdrive-uploader-c6e1f491b041.herokuapp.com/files');
       const data = await response.json();
       setFiles(data);
     };
