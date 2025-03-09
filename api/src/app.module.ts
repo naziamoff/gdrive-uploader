@@ -15,6 +15,8 @@ import { GoogleDriveService } from './modules/googleDrive/googleDrive.service';
       useFactory: async (configService: ConfigService) => {
         const databaseUrl = configService.get<string>('DATABASE_URL');
 
+        console.log(`DATABASE_URL IS FOUND: ${databaseUrl}`);
+
         if (databaseUrl) {
           return {
             dialect: 'postgres',
@@ -22,6 +24,13 @@ import { GoogleDriveService } from './modules/googleDrive/googleDrive.service';
             models: [FileModel],
             autoLoadModels: true,
             synchronize: true,
+            dialectOptions: {
+              ssl: {
+                rejectUnauthorized: false,
+                require: true,
+              },
+            },
+            logging: console.log
           };
         }
 
