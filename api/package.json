@@ -29,6 +29,7 @@
     "dotenv": "^16.4.7",
     "googleapis": "^146.0.0",
     "pg": "^8.13.3",
+    "pg-connection-string": "^2.7.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"
   },

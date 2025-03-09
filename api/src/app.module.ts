@@ -5,6 +5,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { SequelizeModule } from '@nestjs/sequelize';
 import { FileModel } from './modules/files/File.model';
 import { GoogleDriveService } from './modules/googleDrive/googleDrive.service';
+import { parse } from 'pg-connection-string';
 
 @Module({
   imports: [
@@ -15,12 +16,17 @@ import { GoogleDriveService } from './modules/googleDrive/googleDrive.service';
       useFactory: async (configService: ConfigService) => {
         const databaseUrl = configService.get<string>('DATABASE_URL');
 
-        console.log(`DATABASE_URL IS FOUND: ${databaseUrl}`);
-
         if (databaseUrl) {
+          const dbConfig = parse(databaseUrl);
+          console.log(dbConfig);
+
           return {
             dialect: 'postgres',
-            url: databaseUrl,
+            host: dbConfig.host as string,
+            port: Number(dbConfig.port),
+            username: dbConfig.user,
+            password: dbConfig.password,
+            database: String(dbConfig.database),
             models: [FileModel],
             autoLoadModels: true,
             synchronize: true,
