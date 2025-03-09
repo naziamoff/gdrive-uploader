@@ -1,14 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { drive_v3, google } from 'googleapis';
-
-export interface UploadToDrivePayload {
-  fileStream: ReadableStream;
-  fileName: string;
-  mimeType: string;
-  url: string;
-}
+import axios from "axios";
+import {CreateFileDTO} from "../files/dto/createFile.dto";
 
 interface UploadToDriveResult {
+  id: string;
   name: string;
   url: string;
   storage_url: string;
@@ -18,10 +14,14 @@ interface UploadToDriveResult {
 export class GoogleDriveService {
   private gDrive: drive_v3.Drive;
 
+  private folderIdCache: string | null = null;
+
+  private axiosInstance = axios.create({
+    httpAgent: { keepAlive: true, maxSockets: 25 },
+  });
+
   constructor() {
     const encodedCredentials = process.env.GOOGLE_DRIVE_CREDENTIALS || '';
-
-    console.log('found encoded GDRIVE Credentials');
 
     const credentials = Buffer.from(encodedCredentials, 'base64').toString('utf-8');
 
@@ -30,90 +30,93 @@ export class GoogleDriveService {
       scopes: ['https://www.googleapis.com/auth/drive.file'],
     });
 
-    console.log('authentication completed');
-
     this.gDrive = google.drive({ version: 'v3', auth });
-
-    console.log('Gdrive inited');
   }
 
-  async uploadManyToDrive(files: UploadToDrivePayload[]): Promise<UploadToDriveResult[]> {
+  async uploadManyToDrive(files: CreateFileDTO[]): Promise<UploadToDriveResult[]> {
     try {
-      console.log('looking for the folder');
-      const folderId = await this.getOrCreateFolder();
-      console.log('Folder found');
+      const folderId = this.folderIdCache ?? await this.getOrCreateFolder();
 
-      return Promise.all(files.map(
-        async ({
-          fileName,
-          mimeType,
-          fileStream
-        }) => {
-          console.log('Trying to upload file');
-          const response = await this.gDrive.files.create({
-            requestBody: {
-              mimeType,
-              name: fileName,
-              parents: [folderId],
-            },
-            media: { mimeType, body: fileStream },
-            uploadType: 'resumable',
-          });
+      const uploadedFiles = await Promise.all(files.map(
+        (file) => this.uploadSingleFile(file, folderId)),
+      );
 
-          console.log('Creating file permission');
+      this.updateFilePermissions(uploadedFiles);
 
-          this.gDrive.permissions.create({
-            fileId: String(response.data.id),
-            requestBody: {
-              role: 'reader',
-              type: 'anyone',
-            },
-          });
-
-          const fileUrl = `https://drive.google.com/uc?id=${response.data.id}`;
-
-          return {
-            id: String(response.data.id),
-            name: fileName,
-            url: fileUrl,
-            storage_url: fileUrl
-          };
-        }));
+      return uploadedFiles;
     } catch (error) {
       throw new Error(`Error uploading file: ${error.message}`);
     }
   }
 
+  private async uploadSingleFile(
+    { url, name }: CreateFileDTO,
+    folderId: string
+  ) {
+    const fetchResult = await this.axiosInstance.get(
+      url,
+      { responseType: 'stream' }
+    );
+
+    const mimeType = fetchResult.headers['content-type'];
+
+    const response = await this.gDrive.files.create({
+      requestBody: {
+        mimeType,
+        name,
+        parents: [folderId],
+      },
+      media: { mimeType, body: fetchResult.data },
+      uploadType: 'resumable',
+      fields: 'id'
+    });
+
+    const storage_url = `https://drive.google.com/uc?id=${response.data.id}`;
+
+    return {
+      id: String(response.data.id),
+      storage_url,
+      name,
+      url
+    };
+  }
+
+  private updateFilePermissions(files: UploadToDriveResult[]): void {
+    files.forEach((file) => {
+      this.gDrive.permissions.create({
+        fileId: String(file.id),
+        requestBody: {
+          role: 'reader',
+          type: 'anyone',
+        },
+      });
+    })
+  }
+
   async getOrCreateFolder(): Promise<string> {
     const FOLDER_NAME = 'project_files';
 
-    try {
-      const res = await this.gDrive.files.list({
-        q: `name='${FOLDER_NAME}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
-        fields: 'files(id, name)',
-      });
+    const res = await this.gDrive.files.list({
+      q: `name='${FOLDER_NAME}' and mimeType='application/vnd.google-apps.folder' and trashed=false`,
+      fields: 'files(id, name)',
+    });
 
-      if (res.data.files?.length) {
-        return res.data.files[0].id as string;
-      }
+    if (res.data.files?.length) {
+      return res.data.files[0].id as string;
+    }
 
-      const folderMetadata = {
+    const folder = await this.gDrive.files.create({
+      fields: 'id',
+      requestBody: {
         name: FOLDER_NAME,
         mimeType: 'application/vnd.google-apps.folder',
-      };
+      },
+    });
 
-      const folder = await this.gDrive.files.create({
-        requestBody: folderMetadata,
-        fields: 'id',
-      });
-
-      if (!folder.data.id) {
-        throw new Error('Failed to create folder.');
-      }
-
-      return folder.data.id;
-    } catch (error) {
-      throw new Error(`Error getting/creating folder: ${error.message}`);
+    if (!folder.data.id) {
+      throw new Error('Failed to create folder.');
     }
+
+    return folder.data.id;
   }
 }

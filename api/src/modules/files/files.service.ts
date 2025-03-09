@@ -2,8 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { CreateFileDTO } from './dto/createFile.dto';
 import { InjectModel } from '@nestjs/sequelize';
 import { FileModel } from './File.model';
-import axios from 'axios';
-import { GoogleDriveService, UploadToDrivePayload } from '../googleDrive/googleDrive.service';
+import { GoogleDriveService } from '../googleDrive/googleDrive.service';
 import { Op } from 'sequelize';
 
 @Injectable()
@@ -14,13 +13,7 @@ export class FilesService {
   ) {}
 
   async createMany(files: CreateFileDTO[]): Promise<FileModel[]> {
-    console.log('Starting to fetch files');
-    const filesPayload = await Promise.all(
-      files.map(({ name, url }) => this.fetchFile(url, name))
-    );
-    console.log('Files fetched, uploading to drive');
-
-    const uploadedFiles = await this.googleDriveService.uploadManyToDrive(filesPayload);
+    const uploadedFiles = await this.googleDriveService.uploadManyToDrive(files);
 
     console.log('Files uploaded to drive, creating entries in DB');
 
@@ -31,26 +24,6 @@ export class FilesService {
         storage_url: file.storage_url,
     }))
     );
-  }
-
-  private async fetchFile(url: string, name: string): Promise<UploadToDrivePayload> {
-    try {
-      const response = await axios.get(
-        url,
-        { responseType: 'stream' }
-      );
-
-      console.log('fetch completed, response received');
-
-      return {
-        fileStream: response.data as ReadableStream,
-        mimeType: response.headers['content-type'],
-        fileName: name,
-        url,
-      };
-    } catch (error) {
-      throw new Error(`Error while fetching file ${name}. ${error.message}`);
-    }
   }
 
   findAll(): Promise<any[]> {
