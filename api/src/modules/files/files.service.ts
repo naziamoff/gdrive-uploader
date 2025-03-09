@@ -14,11 +14,15 @@ export class FilesService {
   ) {}
 
   async createMany(files: CreateFileDTO[]): Promise<FileModel[]> {
+    console.log('Starting to fetch files');
     const filesPayload = await Promise.all(
       files.map(({ name, url }) => this.fetchFile(url, name))
     );
+    console.log('Files fetched, uploading to drive');
 
     const uploadedFiles = await this.googleDriveService.uploadManyToDrive(filesPayload);
+
+    console.log('Files uploaded to drive, creating entries in DB');
 
     return this.fileModel.bulkCreate(
       uploadedFiles.map((file) => ({
@@ -35,6 +39,8 @@ export class FilesService {
         url,
         { responseType: 'stream' }
       );
+
+      console.log('fetch completed, response received');
 
       return {
         fileStream: response.data as ReadableStream,

@@ -21,6 +21,8 @@ export class GoogleDriveService {
   constructor() {
     const encodedCredentials = process.env.GOOGLE_DRIVE_CREDENTIALS || '';
 
+    console.log('found encoded GDRIVE Credentials');
+
     const credentials = Buffer.from(encodedCredentials, 'base64').toString('utf-8');
 
     const auth = new google.auth.GoogleAuth({
@@ -28,12 +30,18 @@ export class GoogleDriveService {
       scopes: ['https://www.googleapis.com/auth/drive.file'],
     });
 
+    console.log('authentication completed');
+
     this.gDrive = google.drive({ version: 'v3', auth });
+
+    console.log('Gdrive inited');
   }
 
   async uploadManyToDrive(files: UploadToDrivePayload[]): Promise<UploadToDriveResult[]> {
     try {
+      console.log('looking for the folder');
       const folderId = await this.getOrCreateFolder();
+      console.log('Folder found');
 
       return Promise.all(files.map(
         async ({
@@ -41,6 +49,7 @@ export class GoogleDriveService {
           mimeType,
           fileStream
         }) => {
+          console.log('Trying to upload file');
           const response = await this.gDrive.files.create({
             requestBody: {
               mimeType,
@@ -50,6 +59,8 @@ export class GoogleDriveService {
             media: { mimeType, body: fileStream },
             uploadType: 'resumable',
           });
+
+          console.log('Creating file permission');
 
           this.gDrive.permissions.create({
             fileId: String(response.data.id),
