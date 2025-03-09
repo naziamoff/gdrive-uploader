@@ -1,27 +1,26 @@
-# Step 1: Build the frontend
+# Build stage
 FROM node:22-alpine AS build
-
 WORKDIR /app
-
-# Copy and install dependencies for the frontend
 COPY package.json package-lock.json ./
 RUN npm install
-
-# Copy app files and build the frontend
 COPY . .
 RUN npm run build
 
-# Step 2: Set up the production environment with Nginx
+# Production with Nginx
 FROM nginx:alpine
 
-# Copy the built frontend files into the Nginx server's public directory
 COPY --from=build /app/build /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/nginx.conf.template
 
-# Copy custom Nginx configuration
-COPY nginx.conf /etc/nginx/nginx.conf
+# Install envsubst utility
+RUN apk add --no-cache gettext
 
-# Expose the port that Nginx will be serving on
-EXPOSE 80
+# Create startup script properly
+RUN echo '#!/bin/sh' > /start.sh && \
+    echo 'export PORT=${PORT:-80}' >> /start.sh && \
+    echo 'envsubst < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf' >> /start.sh && \
+    echo 'nginx -g "daemon off;"' >> /start.sh && \
+    chmod +x /start.sh
 
-# Start Nginx in the foreground
-CMD ["nginx", "-g", "daemon off;"]
+# Start with the dynamic configuration
+CMD ["/start.sh"]
