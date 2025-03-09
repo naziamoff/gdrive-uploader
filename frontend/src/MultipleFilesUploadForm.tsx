@@ -57,7 +57,8 @@ export const MultipleFilesUploadForm: React.FC = () => {
     setIsUploading(true);
 
     try {
-      const response = await fetch('https://gdrive-uploader-c6e1f491b041.herokuapp.com/files', {
+      console.log(124);
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/files`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

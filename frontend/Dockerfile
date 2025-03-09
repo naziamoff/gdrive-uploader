@@ -11,13 +11,17 @@ RUN npm install
 COPY . .
 RUN npm run build
 
-# Step 2: Set up the production environment
-FROM node:22-alpine
+# Step 2: Set up the production environment with Nginx
+FROM nginx:alpine
 
-WORKDIR /app
+# Copy the built frontend files into the Nginx server's public directory
+COPY --from=build /app/build /usr/share/nginx/html
 
-# Copy built frontend files from the build stage
-COPY --from=build /app/build /app/build
+# Copy custom Nginx configuration
+COPY nginx.conf /etc/nginx/nginx.conf
 
-# Expose the port that the frontend will be served on
-EXPOSE 8080
+# Expose the port that Nginx will be serving on
+EXPOSE 80
+
+# Start Nginx in the foreground
+CMD ["nginx", "-g", "daemon off;"]
