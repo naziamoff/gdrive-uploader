@@ -4,7 +4,7 @@ import { CreateFileDTO } from './dto/createFile.dto';
 import { File } from './interfaces/file.interface';
 import { FileModel } from './File.model';
 
-@Controller('files')
+@Controller('/files')
 export class FilesController {
   constructor(private readonly fileService: FilesService) {}
 

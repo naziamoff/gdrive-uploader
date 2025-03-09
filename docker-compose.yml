@@ -14,12 +14,28 @@ services:
       - app-network
 
   frontend:
-        build:
-          context: ./frontend
-        ports:
-          - "80:80"
-        networks:
-          - app-network
+    build:
+      context: ./frontend
+    ports:
+      - "3001:3001"
+    networks:
+      - app-network
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - frontend
+      - api
+    volumes:
+      - ./nginx/nginx.conf.template:/etc/nginx/nginx.conf.template:ro
+    environment:
+      - PORT=80
+    entrypoint: [ "/bin/sh", "-c", "envsubst '$$API_URL $$API_PORT $$PORT' < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf && exec nginx -g 'daemon off;'" ]
+    networks:
+      - app-network
 
   db:
     image: postgres:latest

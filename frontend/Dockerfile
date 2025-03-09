@@ -6,21 +6,13 @@ RUN npm install
 COPY . .
 RUN npm run build
 
-# Production with Nginx
-FROM nginx:alpine
+# Serve static files with a lightweight web server
+FROM node:22-alpine
+WORKDIR /app
+COPY --from=build /app/build /usr/share/frontend
 
-COPY --from=build /app/build /usr/share/nginx/html
-COPY nginx.conf /etc/nginx/nginx.conf.template
+# Install a simple HTTP server (serve)
+RUN npm install -g serve
 
-# Install envsubst utility
-RUN apk add --no-cache gettext
-
-# Create startup script properly
-RUN echo '#!/bin/sh' > /start.sh && \
-    echo 'export PORT=${PORT:-80}' >> /start.sh && \
-    echo 'envsubst < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf' >> /start.sh && \
-    echo 'nginx -g "daemon off;"' >> /start.sh && \
-    chmod +x /start.sh
-
-# Start with the dynamic configuration
-CMD ["/start.sh"]
+# Start frontend
+CMD ["serve", "-s", "/usr/share/frontend", "-l", "3001"]
