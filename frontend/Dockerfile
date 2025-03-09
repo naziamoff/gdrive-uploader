@@ -13,11 +13,12 @@ FROM nginx:alpine
 
 COPY --from=build /app/build /usr/share/nginx/html
 
-ENV PORT ${PORT:-8080}
+# Copy the template to the correct location for auto-substitution
+COPY nginx.conf.template /etc/nginx/templates/default.conf.template
 
-EXPOSE $PORT
-
-COPY nginx.conf.template /etc/nginx/nginx.conf.template
 RUN chmod -R 755 /usr/share/nginx/html
 
+EXPOSE 8080
+
+# The official nginx image will handle variable substitution and starting nginx
 CMD ["nginx", "-g", "daemon off;"]
