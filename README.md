@@ -2,6 +2,8 @@
 
 A simple tool to upload multiple files to Google Drive and view the uploaded files.
 
+![Demo](assets/demo.gif)
+
 ## Technologies Used
 
 - Docker (for easy setup and deployment)
