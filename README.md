@@ -7,6 +7,10 @@ A simple tool to upload multiple files to Google Drive and view the uploaded fil
 - Docker (for easy setup and deployment)
 - Google Drive API (for uploading and viewing files)
 - PostgreSQL (for storing data related to file uploads)
+- NestJS (for building the backend API)
+- TypeScript (for type-safe development in both the backend and frontend)
+- React (for the frontend user interface)
+- Material-UI (for UI components and styling)
 
 ## Setup Instructions
 
