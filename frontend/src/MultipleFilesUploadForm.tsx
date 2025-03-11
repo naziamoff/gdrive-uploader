@@ -57,8 +57,6 @@ export const MultipleFilesUploadForm: React.FC = () => {
     setIsUploading(true);
 
     try {
-      console.log(125);
-
       const response = await fetch(`http://localhost/api/files`, {
         method: 'POST',
         headers: {
@@ -80,7 +78,6 @@ export const MultipleFilesUploadForm: React.FC = () => {
         alert('Error uploading files');
       }
     } catch (error) {
-      console.error('Upload failed', error);
       alert('Error uploading files');
       setIsUploading(false);
     }

@@ -10,10 +10,5 @@ async function bootstrap() {
 
   const serverUrl = `http://localhost:${port}`;
   console.log(`🚀 API is running on: ${serverUrl}`);
-
-  // If behind a proxy, log Heroku's provided hostname
-  if (process.env.HEROKU_APP_NAME) {
-    console.log(`🌍 Possible external URL: https://${process.env.HEROKU_APP_NAME}.herokuapp.com`);
-  }
 }
 bootstrap();

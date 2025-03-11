@@ -1,14 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { drive_v3, google } from 'googleapis';
 import axios from "axios";
-import {CreateFileDTO} from "../files/dto/createFile.dto";
-
-interface UploadToDriveResult {
-  id: string;
-  name: string;
-  url: string;
-  storage_url: string;
-}
+import { CreateFileDTO } from "../files/dto/createFile.dto";
+import { UploadToDriveResult } from "./interfaces/UploadToDriveResult";
 
 @Injectable()
 export class GoogleDriveService {
@@ -41,7 +35,7 @@ export class GoogleDriveService {
         (file) => this.uploadSingleFile(file, folderId)),
       );
 
-      this.updateFilePermissions(uploadedFiles);
+      await this.updateFilePermissions(uploadedFiles);
 
       return uploadedFiles;
     } catch (error) {
@@ -81,19 +75,7 @@ export class GoogleDriveService {
     };
   }
 
-  private updateFilePermissions(files: UploadToDriveResult[]): void {
-    files.forEach((file) => {
-      this.gDrive.permissions.create({
-        fileId: String(file.id),
-        requestBody: {
-          role: 'reader',
-          type: 'anyone',
-        },
-      });
-    })
-  }
-
-  async getOrCreateFolder(): Promise<string> {
+  private async getOrCreateFolder(): Promise<string> {
     const FOLDER_NAME = 'project_files';
 
     const res = await this.gDrive.files.list({
@@ -118,5 +100,18 @@ export class GoogleDriveService {
     }
 
     return folder.data.id;
+  }
+
+  private async updateFilePermissions(files: UploadToDriveResult[]): Promise<void> {
+    await Promise.all(
+      files.map((file) => (
+        this.gDrive.permissions.create({
+          fileId: String(file.id),
+          requestBody: {
+            role: 'reader',
+            type: 'anyone',
+          },
+        })
+      )))
   }
 }

@@ -1,7 +1,6 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
 import { FilesService } from './files.service';
 import { CreateFileDTO } from './dto/createFile.dto';
-import { File } from './interfaces/file.interface';
 import { FileModel } from './File.model';
 
 @Controller('/files')
@@ -14,7 +13,7 @@ export class FilesController {
   }
 
   @Get()
-  findAll(): Promise<File[]> {
+  findAll(): Promise<FileModel[]> {
     return this.fileService.findAll();
   }
 }

@@ -19,7 +19,6 @@ interface File {
 export const UploadedFiles: React.FC = () => {
   const [files, setFiles] = useState<File[]>([]);
 
-    console.log('uploaded files')
   useEffect(() => {
     const fetchFiles = async () => {
       const response = await fetch(`http://localhost/api/files`);
